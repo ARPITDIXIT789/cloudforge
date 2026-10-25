@@ -1,0 +1,24 @@
+# CloudForge App Configuration — Developer Interface
+# Update these values and run `make gitops-init` to onboard your application.
+
+app:
+  name: "sample-microservice"
+  namespace: "production"
+  image:
+    repository: "123456789012.dkr.ecr.ap-south-1.amazonaws.com/sample-microservice"
+    tag: "latest"
+  replicas:
+    min: 2
+    max: 10
+  port: 8080
+  healthcheck: "/healthz"
+  resources:
+    cpu: "256m"
+    memory: "512Mi"
+  ingress:
+    enabled: true
+    host: "api.cloudforge.internal"
+    tls: true
+  database:
+    enabled: true
+    engine: "postgresql"

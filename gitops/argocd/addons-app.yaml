@@ -1,0 +1,153 @@
+###############################################################################
+# CloudForge — Cluster Addons ArgoCD Application
+# Bootstraps AWS Load Balancer Controller & cert-manager via Helm
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudforge-addons-aws-lb-controller
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: aws-load-balancer-controller
+    app.kubernetes.io/part-of: cloudforge
+    app.kubernetes.io/component: addon
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://aws.github.io/eks-charts
+    chart: aws-load-balancer-controller
+    targetRevision: 1.8.*
+    helm:
+      releaseName: aws-load-balancer-controller
+      valuesObject:
+        clusterName: cloudforge-cluster
+        region: ap-south-1
+        vpcId: vpc-xxxxxxxxxxxxxxxxx
+        serviceAccount:
+          create: true
+          name: aws-load-balancer-controller
+          annotations:
+            # -- IRSA annotation: replace with your real IAM role ARN
+            eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/cloudforge-aws-lb-controller-role"
+        replicaCount: 2
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        enableShield: false
+        enableWaf: false
+        enableWafv2: false
+        podDisruptionBudget:
+          minAvailable: 1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+---
+###############################################################################
+# cert-manager — TLS certificate management
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudforge-addons-cert-manager
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/part-of: cloudforge
+    app.kubernetes.io/component: addon
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.15.*
+    helm:
+      releaseName: cert-manager
+      valuesObject:
+        installCRDs: true
+        replicaCount: 2
+        global:
+          leaderElection:
+            namespace: cert-manager
+        serviceAccount:
+          create: true
+          name: cert-manager
+          annotations:
+            # -- IRSA annotation: replace with your real IAM role ARN
+            eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/cloudforge-cert-manager-role"
+        securityContext:
+          runAsNonRoot: true
+          fsGroup: 1001
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        prometheus:
+          enabled: true
+          servicemonitor:
+            enabled: true
+        webhook:
+          replicaCount: 2
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+        cainjector:
+          replicaCount: 1
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

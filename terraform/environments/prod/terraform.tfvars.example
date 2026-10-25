@@ -1,0 +1,27 @@
+# =============================================================================
+# CloudForge — Production Environment Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# NEVER commit terraform.tfvars to version control — it may contain secrets.
+#
+# Production settings — review carefully before applying.
+# =============================================================================
+
+# --- General -----------------------------------------------------------------
+aws_region   = "ap-south-1"
+project_name = "cloudforge"
+environment  = "prod"
+
+# --- Networking --------------------------------------------------------------
+vpc_cidr   = "10.1.0.0/16"                     # Separate CIDR from dev (10.0.0.0/16) for peering compatibility
+admin_cidr = "YOUR_VPN_IP/32"                   # Replace with VPN / office egress IP for bastion SSH
+
+# --- Bastion -----------------------------------------------------------------
+bastion_key_name = "cloudforge-prod-bastion-key"  # Must exist in the target region
+
+# --- Database (RDS) ----------------------------------------------------------
+db_name     = "appdb"
+db_username = "cloudforge_admin"

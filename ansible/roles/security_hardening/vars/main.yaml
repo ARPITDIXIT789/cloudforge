@@ -1,0 +1,33 @@
+---
+# ============================================================================
+# CloudForge - Security Hardening Role Variables
+# ============================================================================
+
+# SSH configuration
+ssh_port: 22
+allowed_ssh_users:
+  - ec2-user
+
+# Tool versions
+kubectl_version: "1.30.0"
+helm_version: "3.15.0"
+awscli_version: "2"
+
+# Firewall configuration
+ufw_allowed_ports:
+  - 22
+
+# Disabled filesystems (CIS benchmark)
+disabled_filesystems:
+  - cramfs
+  - freevxfs
+  - jffs2
+  - hfs
+  - hfsplus
+  - udf
+
+# Audit logging
+auditd_max_log_file: 50
+auditd_max_log_file_action: keep_logs
+auditd_space_left_action: email
+auditd_admin_space_left_action: halt

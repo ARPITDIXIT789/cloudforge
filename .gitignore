@@ -1,0 +1,54 @@
+# ==============================================================================
+# CloudForge — Git Ignore Rules
+# ==============================================================================
+
+# --- Terraform ---
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Local environment variables / secrets
+*.tfvars
+!*.tfvars.example
+
+# --- Keys & Secrets ---
+*.pem
+*.key
+*.pub
+id_rsa
+secrets.yaml
+
+# --- Ansible ---
+ansible/.retry
+ansible/*.retry
+
+# --- Operating System & IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Python & Build ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Infracost & Scanners ---
+.infracost/
+infracost.json
+trivy-results.sarif
+sbom.json

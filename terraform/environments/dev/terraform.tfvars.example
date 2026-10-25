@@ -1,0 +1,25 @@
+# =============================================================================
+# CloudForge — Dev Environment Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# NEVER commit terraform.tfvars to version control — it may contain secrets.
+# =============================================================================
+
+# --- General -----------------------------------------------------------------
+aws_region   = "ap-south-1"
+project_name = "cloudforge"
+environment  = "dev"
+
+# --- Networking --------------------------------------------------------------
+vpc_cidr   = "10.0.0.0/16"
+admin_cidr = "YOUR_IP/32"             # Replace with your public IP for bastion SSH
+
+# --- Bastion -----------------------------------------------------------------
+bastion_key_name = "cloudforge-bastion-key"   # Must exist in the target region
+
+# --- Database (RDS) ----------------------------------------------------------
+db_name     = "appdb"
+db_username = "cloudforge_admin"

@@ -1,0 +1,501 @@
+---
+# ============================================================================
+# CloudForge - Security Hardening Tasks (CIS Benchmark Aligned)
+# ============================================================================
+# This role applies production-grade security hardening to bastion hosts.
+# Tasks are organized by domain and tagged for selective execution.
+# ============================================================================
+
+# --------------------------------------------------------------------------
+# 1. System Package Updates
+# --------------------------------------------------------------------------
+- name: Update all system packages to latest version
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+  tags:
+    - packages
+    - always
+
+- name: Install essential security packages
+  ansible.builtin.dnf:
+    name:
+      - audit
+      - audit-libs
+      - curl
+      - unzip
+      - jq
+      - git
+    state: present
+  tags:
+    - packages
+
+# --------------------------------------------------------------------------
+# 2. SSH Hardening (CIS 5.2.x)
+# --------------------------------------------------------------------------
+- name: "SSH | Disable root login (CIS 5.2.10)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Disable password authentication (CIS 5.2.8)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Enforce public key authentication (CIS 5.2.7)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PubkeyAuthentication'
+    line: 'PubkeyAuthentication yes'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Set MaxAuthTries to 3 (CIS 5.2.6)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?MaxAuthTries'
+    line: 'MaxAuthTries 3'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Set LoginGraceTime to 60 seconds (CIS 5.2.16)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?LoginGraceTime'
+    line: 'LoginGraceTime 60'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Disable X11 forwarding (CIS 5.2.11)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?X11Forwarding'
+    line: 'X11Forwarding no'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Set ClientAliveInterval to 300 (CIS 5.2.13)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ClientAliveInterval'
+    line: 'ClientAliveInterval 300'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Set ClientAliveCountMax to 2 (CIS 5.2.13)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ClientAliveCountMax'
+    line: 'ClientAliveCountMax 2'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Restrict allowed users"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?AllowUsers'
+    line: "AllowUsers {{ allowed_ssh_users | join(' ') }}"
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Disable empty passwords (CIS 5.2.9)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitEmptyPasswords'
+    line: 'PermitEmptyPasswords no'
+    validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart sshd
+  tags:
+    - ssh
+    - cis
+
+- name: "SSH | Set proper permissions on sshd_config (CIS 5.2.1)"
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0600"
+  tags:
+    - ssh
+    - cis
+    - permissions
+
+# --------------------------------------------------------------------------
+# 3. Firewall (UFW)
+# --------------------------------------------------------------------------
+- name: "Firewall | Install UFW"
+  ansible.builtin.dnf:
+    name: ufw
+    state: present
+  tags:
+    - firewall
+
+- name: "Firewall | Set default deny incoming"
+  community.general.ufw:
+    default: deny
+    direction: incoming
+  tags:
+    - firewall
+
+- name: "Firewall | Set default allow outgoing"
+  community.general.ufw:
+    default: allow
+    direction: outgoing
+  tags:
+    - firewall
+
+- name: "Firewall | Allow configured ports"
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ ufw_allowed_ports }}"
+  tags:
+    - firewall
+
+- name: "Firewall | Enable UFW"
+  community.general.ufw:
+    state: enabled
+  tags:
+    - firewall
+
+# --------------------------------------------------------------------------
+# 4. Install kubectl
+# --------------------------------------------------------------------------
+- name: "kubectl | Download kubectl v{{ kubectl_version }}"
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/v{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: /tmp/kubectl
+    mode: "0755"
+    timeout: 60
+  tags:
+    - tools
+    - kubectl
+
+- name: "kubectl | Install kubectl to /usr/local/bin"
+  ansible.builtin.copy:
+    src: /tmp/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+    owner: root
+    group: root
+    remote_src: true
+  tags:
+    - tools
+    - kubectl
+
+- name: "kubectl | Verify kubectl installation"
+  ansible.builtin.command:
+    cmd: /usr/local/bin/kubectl version --client --output=json
+  register: kubectl_verify
+  changed_when: false
+  tags:
+    - tools
+    - kubectl
+
+- name: "kubectl | Display installed version"
+  ansible.builtin.debug:
+    msg: "kubectl installed: {{ (kubectl_verify.stdout | from_json).clientVersion.gitVersion }}"
+  tags:
+    - tools
+    - kubectl
+
+# --------------------------------------------------------------------------
+# 5. Install Helm
+# --------------------------------------------------------------------------
+- name: "Helm | Download Helm v{{ helm_version }} archive"
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    dest: /tmp/helm.tar.gz
+    mode: "0644"
+    timeout: 60
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Create temporary extraction directory"
+  ansible.builtin.file:
+    path: /tmp/helm-extract
+    state: directory
+    mode: "0755"
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Extract Helm archive"
+  ansible.builtin.unarchive:
+    src: /tmp/helm.tar.gz
+    dest: /tmp/helm-extract
+    remote_src: true
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Install Helm to /usr/local/bin"
+  ansible.builtin.copy:
+    src: /tmp/helm-extract/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: "0755"
+    owner: root
+    group: root
+    remote_src: true
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Verify Helm installation"
+  ansible.builtin.command:
+    cmd: /usr/local/bin/helm version --short
+  register: helm_verify
+  changed_when: false
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Display installed version"
+  ansible.builtin.debug:
+    msg: "Helm installed: {{ helm_verify.stdout }}"
+  tags:
+    - tools
+    - helm
+
+- name: "Helm | Clean up temporary files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/helm.tar.gz
+    - /tmp/helm-extract
+  tags:
+    - tools
+    - helm
+
+# --------------------------------------------------------------------------
+# 6. Install AWS CLI v2
+# --------------------------------------------------------------------------
+- name: "AWS CLI | Check if AWS CLI v2 is already installed"
+  ansible.builtin.stat:
+    path: /usr/local/bin/aws
+  register: aws_cli_binary
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Download AWS CLI v{{ awscli_version }} installer"
+  ansible.builtin.get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: /tmp/awscliv2.zip
+    mode: "0644"
+    timeout: 120
+  when: not aws_cli_binary.stat.exists
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Extract AWS CLI installer"
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp
+    remote_src: true
+  when: not aws_cli_binary.stat.exists
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Run AWS CLI installer"
+  ansible.builtin.command:
+    cmd: /tmp/aws/install
+    creates: /usr/local/bin/aws
+  when: not aws_cli_binary.stat.exists
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Verify AWS CLI installation"
+  ansible.builtin.command:
+    cmd: /usr/local/bin/aws --version
+  register: awscli_verify
+  changed_when: false
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Display installed version"
+  ansible.builtin.debug:
+    msg: "AWS CLI installed: {{ awscli_verify.stdout }}"
+  tags:
+    - tools
+    - awscli
+
+- name: "AWS CLI | Clean up installer files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/awscliv2.zip
+    - /tmp/aws
+  when: not aws_cli_binary.stat.exists
+  tags:
+    - tools
+    - awscli
+
+# --------------------------------------------------------------------------
+# 7. Additional Hardening (CIS 1.1.x - Disable Unused Filesystems)
+# --------------------------------------------------------------------------
+- name: "CIS | Disable unused filesystems"
+  ansible.builtin.copy:
+    dest: "/etc/modprobe.d/{{ item }}.conf"
+    content: |
+      # CIS Benchmark - Disable {{ item }} filesystem
+      install {{ item }} /bin/true
+      blacklist {{ item }}
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ disabled_filesystems }}"
+  tags:
+    - hardening
+    - cis
+    - filesystems
+
+# --------------------------------------------------------------------------
+# 8. Audit Logging Configuration (CIS 4.1.x)
+# --------------------------------------------------------------------------
+- name: "Audit | Ensure auditd is installed"
+  ansible.builtin.dnf:
+    name:
+      - audit
+      - audit-libs
+    state: present
+  tags:
+    - audit
+    - cis
+
+- name: "Audit | Configure auditd settings"
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - regexp: '^max_log_file\s*='
+      line: "max_log_file = {{ auditd_max_log_file }}"
+    - regexp: '^max_log_file_action\s*='
+      line: "max_log_file_action = {{ auditd_max_log_file_action }}"
+    - regexp: '^space_left_action\s*='
+      line: "space_left_action = {{ auditd_space_left_action }}"
+    - regexp: '^admin_space_left_action\s*='
+      line: "admin_space_left_action = {{ auditd_admin_space_left_action }}"
+  notify: Restart auditd
+  tags:
+    - audit
+    - cis
+
+- name: "Audit | Configure audit rules for security events"
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/cloudforge-hardening.rules
+    content: |
+      # CloudForge CIS Benchmark Audit Rules
+      # =====================================
+
+      # Monitor changes to user/group information (CIS 4.1.4 - 4.1.6)
+      -w /etc/group -p wa -k identity
+      -w /etc/passwd -p wa -k identity
+      -w /etc/shadow -p wa -k identity
+      -w /etc/gshadow -p wa -k identity
+      -w /etc/security/opasswd -p wa -k identity
+
+      # Monitor changes to network configuration (CIS 4.1.7)
+      -a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale
+      -w /etc/hostname -p wa -k system-locale
+      -w /etc/hosts -p wa -k system-locale
+      -w /etc/sysconfig/network -p wa -k system-locale
+
+      # Monitor login/logout events (CIS 4.1.8)
+      -w /var/log/lastlog -p wa -k logins
+      -w /var/run/faillock/ -p wa -k logins
+      -w /var/log/wtmp -p wa -k logins
+      -w /var/log/btmp -p wa -k logins
+
+      # Monitor session initiation (CIS 4.1.9)
+      -w /var/run/utmp -p wa -k session
+      -w /var/log/wtmp -p wa -k session
+      -w /var/log/btmp -p wa -k session
+
+      # Monitor sudoers changes (CIS 4.1.15)
+      -w /etc/sudoers -p wa -k sudoers
+      -w /etc/sudoers.d/ -p wa -k sudoers
+
+      # Monitor SSH configuration changes
+      -w /etc/ssh/sshd_config -p wa -k sshd_config
+      -w /etc/ssh/sshd_config.d/ -p wa -k sshd_config
+
+      # Monitor kernel module loading (CIS 4.1.17)
+      -w /sbin/insmod -p x -k modules
+      -w /sbin/rmmod -p x -k modules
+      -w /sbin/modprobe -p x -k modules
+      -a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+
+      # Make the audit configuration immutable (must be last rule)
+      -e 2
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart auditd
+  tags:
+    - audit
+    - cis
+
+- name: "Audit | Enable and start auditd service"
+  ansible.builtin.service:
+    name: auditd
+    state: started
+    enabled: true
+  tags:
+    - audit
+    - cis
+
+# --------------------------------------------------------------------------
+# 9. Cleanup temporary kubectl file
+# --------------------------------------------------------------------------
+- name: "Cleanup | Remove temporary kubectl download"
+  ansible.builtin.file:
+    path: /tmp/kubectl
+    state: absent
+  tags:
+    - tools
+    - kubectl

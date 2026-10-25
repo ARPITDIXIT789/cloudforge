@@ -1,0 +1,20 @@
+---
+# ============================================================================
+# CloudForge - Security Hardening Role Handlers
+# ============================================================================
+
+- name: Restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+    enabled: true
+
+- name: Restart auditd
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+    enabled: true
+
+- name: Reload ufw
+  community.general.ufw:
+    state: enabled

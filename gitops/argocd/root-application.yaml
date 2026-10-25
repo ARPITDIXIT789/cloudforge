@@ -1,0 +1,48 @@
+###############################################################################
+# CloudForge — ArgoCD Root Application (App-of-Apps Pattern)
+# Manages all child applications under gitops/apps/
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudforge-root
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: cloudforge-root
+    app.kubernetes.io/part-of: cloudforge
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: /gitops/apps
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ARPITDIXIT789/cloudforge.git
+    targetRevision: main
+    path: gitops/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

@@ -1,0 +1,51 @@
+###############################################################################
+#  CloudForge — {{ include "sample-microservice.fullname" . }}
+###############################################################################
+
+1. Application deployed successfully!
+
+   Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
+   Release: {{ .Release.Name }}
+
+2. Service endpoint:
+
+   {{ include "sample-microservice.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+{{- if .Values.ingress.enabled }}
+
+3. Ingress is ENABLED:
+
+   Host:  {{ .Values.ingress.host }}
+   {{- if .Values.ingress.tls.enabled }}
+   URL:   https://{{ .Values.ingress.host }}
+   {{- else }}
+   URL:   http://{{ .Values.ingress.host }}
+   {{- end }}
+
+   Ensure your DNS record points to the ALB provisioned by the AWS Load
+   Balancer Controller.
+{{- end }}
+
+{{- if .Values.autoscaling.enabled }}
+
+4. Autoscaling is ENABLED:
+
+   Min replicas: {{ .Values.autoscaling.minReplicas }}
+   Max replicas: {{ .Values.autoscaling.maxReplicas }}
+   CPU target:   {{ .Values.autoscaling.targetCPUUtilization }}%
+{{- else }}
+
+4. Replicas: {{ .Values.replicaCount }} (autoscaling disabled)
+{{- end }}
+
+{{- if .Values.canary.enabled }}
+
+5. Canary rollouts are ENABLED via Argo Rollouts.
+
+   Use `kubectl argo rollouts get rollout {{ include "sample-microservice.fullname" . }} -n {{ .Release.Namespace }}`
+   to monitor progressive delivery.
+{{- end }}
+
+6. Health check:
+
+   GET {{ .Values.healthcheck.path }} on port {{ .Values.service.targetPort }}

@@ -1,0 +1,209 @@
+###############################################################################
+# CloudForge — Prometheus Alert Rules (PrometheusRule CRD)
+# ─────────────────────────────────────────────────────────────────────────────
+# Groups:
+#   1. kubernetes-pod-alerts     — Pod crash loops, readiness, OOM kills
+#   2. kubernetes-node-alerts    — Node CPU, memory, readiness
+#   3. application-sre-alerts    — Latency (p99), error rate, target health
+###############################################################################
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cloudforge-alert-rules
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: cloudforge
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: cloudforge-observability
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    # ╔═════════════════════════════════════════════════════════════════════════╗
+    # ║  Group 1 — Kubernetes Pod Alerts                                      ║
+    # ╚═════════════════════════════════════════════════════════════════════════╝
+    - name: kubernetes-pod-alerts
+      rules:
+        # ── Pod Crash Looping ─────────────────────────────────────────────────
+        - alert: PodCrashLooping
+          expr: |
+            increase(
+              kube_pod_container_status_restarts_total{namespace=~".*"}[10m]
+            ) > 5
+          for: 0m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping"
+            description: >-
+              Container {{ $labels.container }} in pod
+              {{ $labels.namespace }}/{{ $labels.pod }} has restarted
+              {{ $value | printf "%.0f" }} times in the last 10 minutes.
+            runbook_url: "https://runbooks.cloudforge.io/pod-crash-looping"
+            dashboard_url: "https://grafana.cloudforge.io/d/k8s-pods"
+
+        # ── Pod Not Ready ────────────────────────────────────────────────────
+        - alert: PodNotReady
+          expr: |
+            min_over_time(
+              kube_pod_status_phase{phase="Running"}[5m]
+            ) == 0
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not ready"
+            description: >-
+              Pod {{ $labels.namespace }}/{{ $labels.pod }} has not been in
+              Running phase for more than 5 minutes.
+            runbook_url: "https://runbooks.cloudforge.io/pod-not-ready"
+
+        # ── Container OOM Killed ─────────────────────────────────────────────
+        - alert: ContainerOOMKilled
+          expr: |
+            increase(
+              container_oom_events_total{namespace=~".*"}[5m]
+            ) > 0
+          for: 0m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Container {{ $labels.container }} OOM-killed in {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: >-
+              Container {{ $labels.container }} in pod
+              {{ $labels.namespace }}/{{ $labels.pod }} was killed due to
+              an Out-Of-Memory condition. Current memory limit may be
+              insufficient. Value: {{ $value | printf "%.0f" }} OOM events.
+            runbook_url: "https://runbooks.cloudforge.io/container-oom-killed"
+
+    # ╔═════════════════════════════════════════════════════════════════════════╗
+    # ║  Group 2 — Kubernetes Node Alerts                                     ║
+    # ╚═════════════════════════════════════════════════════════════════════════╝
+    - name: kubernetes-node-alerts
+      rules:
+        # ── High Node CPU Utilization ────────────────────────────────────────
+        - alert: HighNodeCPU
+          expr: |
+            (
+              1 - avg by (instance) (
+                rate(node_cpu_seconds_total{mode="idle"}[5m])
+              )
+            ) * 100 > 85
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Node {{ $labels.instance }} CPU utilization above 85%"
+            description: >-
+              Node {{ $labels.instance }} has sustained CPU utilization of
+              {{ $value | printf "%.1f" }}% for more than 10 minutes.
+              Consider scaling the node group or investigating high-CPU workloads.
+            runbook_url: "https://runbooks.cloudforge.io/high-node-cpu"
+
+        # ── High Node Memory Utilization ─────────────────────────────────────
+        - alert: HighNodeMemory
+          expr: |
+            (
+              1 - (
+                node_memory_MemAvailable_bytes
+                / node_memory_MemTotal_bytes
+              )
+            ) * 100 > 90
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Node {{ $labels.instance }} memory utilization above 90%"
+            description: >-
+              Node {{ $labels.instance }} memory utilization is at
+              {{ $value | printf "%.1f" }}%. Risk of OOM conditions for
+              scheduled pods. Consider draining and scaling.
+            runbook_url: "https://runbooks.cloudforge.io/high-node-memory"
+
+        # ── Node Not Ready ───────────────────────────────────────────────────
+        - alert: NodeNotReady
+          expr: |
+            kube_node_status_condition{condition="Ready", status="true"} != 1
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Node {{ $labels.node }} is not ready"
+            description: >-
+              Kubernetes node {{ $labels.node }} has been in a NotReady state
+              for more than 5 minutes. Pods may be evicted or unschedulable.
+            runbook_url: "https://runbooks.cloudforge.io/node-not-ready"
+
+    # ╔═════════════════════════════════════════════════════════════════════════╗
+    # ║  Group 3 — Application SRE Alerts (Golden Signals)                    ║
+    # ╚═════════════════════════════════════════════════════════════════════════╝
+    - name: application-sre-alerts
+      rules:
+        # ── High Latency P99 ─────────────────────────────────────────────────
+        - alert: HighLatencyP99
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum by (le, job, namespace) (
+                rate(http_request_duration_seconds_bucket[5m])
+              )
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+            team: application
+          annotations:
+            summary: "High P99 latency for {{ $labels.job }} in {{ $labels.namespace }}"
+            description: >-
+              The 99th percentile request latency for {{ $labels.job }} in
+              namespace {{ $labels.namespace }} is {{ $value | printf "%.2f" }}s,
+              exceeding the 1s SLO threshold for 5 minutes.
+            runbook_url: "https://runbooks.cloudforge.io/high-latency"
+            dashboard_url: "https://grafana.cloudforge.io/d/golden-signals"
+
+        # ── High Error Rate (5xx) ────────────────────────────────────────────
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum by (job, namespace) (
+                rate(http_requests_total{status=~"5.."}[5m])
+              )
+              /
+              sum by (job, namespace) (
+                rate(http_requests_total[5m])
+              )
+            ) * 100 > 1
+          for: 5m
+          labels:
+            severity: critical
+            team: application
+          annotations:
+            summary: "High 5xx error rate for {{ $labels.job }} in {{ $labels.namespace }}"
+            description: >-
+              Error rate for {{ $labels.job }} in namespace
+              {{ $labels.namespace }} is {{ $value | printf "%.2f" }}%,
+              exceeding the 1% SLO threshold. Investigate application logs
+              and upstream dependencies.
+            runbook_url: "https://runbooks.cloudforge.io/high-error-rate"
+            dashboard_url: "https://grafana.cloudforge.io/d/golden-signals"
+
+        # ── Target Unhealthy ─────────────────────────────────────────────────
+        - alert: TargetUnhealthy
+          expr: up == 0
+          for: 3m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Prometheus target {{ $labels.job }}/{{ $labels.instance }} is down"
+            description: >-
+              Prometheus has been unable to scrape target
+              {{ $labels.instance }} (job: {{ $labels.job }}) for more than
+              3 minutes. The service may be down or the endpoint unreachable.
+            runbook_url: "https://runbooks.cloudforge.io/target-unhealthy"

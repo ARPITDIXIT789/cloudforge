@@ -1,0 +1,224 @@
+{{- if .Values.canary.enabled }}
+{{/*
+###############################################################################
+# CloudForge — Argo Rollouts Rollout (Canary Strategy)
+# This resource replaces the Deployment when canary is enabled.
+###############################################################################
+*/}}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "sample-microservice.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sample-microservice.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      {{- include "sample-microservice.selectorLabels" . | nindent 6 }}
+  strategy:
+    canary:
+      canaryService: {{ include "sample-microservice.fullname" . }}-canary
+      stableService: {{ include "sample-microservice.fullname" . }}
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        {{- toYaml .Values.canary.steps | nindent 8 }}
+      {{- if .Values.canary.analysis.enabled }}
+      analysis:
+        templates:
+          - templateName: {{ include "sample-microservice.fullname" . }}-error-rate
+        startingStep: 1
+        args:
+          - name: service-name
+            value: {{ include "sample-microservice.fullname" . }}
+          - name: namespace
+            value: {{ .Release.Namespace }}
+      {{- end }}
+      antiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          weight: 100
+  template:
+    metadata:
+      labels:
+        {{- include "sample-microservice.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "sample-microservice.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "sample-microservice.selectorLabels" . | nindent 20 }}
+                topologyKey: kubernetes.io/hostname
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "sample-microservice.selectorLabels" . | nindent 20 }}
+                topologyKey: topology.kubernetes.io/zone
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ include "sample-microservice.name" . }}
+          image: {{ include "sample-microservice.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+            successThreshold: {{ .Values.healthcheck.successThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: 3
+            successThreshold: 1
+          {{- if or .Values.env .Values.envFromConfigMaps .Values.envFromSecrets }}
+          {{- if .Values.env }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          {{- end }}
+          envFrom:
+            {{- range .Values.envFromConfigMaps }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- range .Values.envFromSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+---
+###############################################################################
+# Canary Service — used by Argo Rollouts to route canary traffic
+###############################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sample-microservice.fullname" . }}-canary
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sample-microservice.labels" . | nindent 4 }}
+    app.kubernetes.io/component: canary
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "sample-microservice.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: {{ .Values.service.protocol | default "TCP" }}
+---
+{{- if .Values.canary.analysis.enabled }}
+###############################################################################
+# AnalysisTemplate — Prometheus HTTP 5xx Error Rate
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "sample-microservice.fullname" . }}-error-rate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sample-microservice.labels" . | nindent 4 }}
+spec:
+  args:
+    - name: service-name
+    - name: namespace
+  metrics:
+    - name: error-rate
+      interval: {{ .Values.canary.analysis.interval }}
+      failureLimit: {{ .Values.canary.analysis.threshold }}
+      successCondition: "result[0] < 0.01"
+      provider:
+        prometheus:
+          address: {{ .Values.canary.analysis.prometheusAddress }}
+          query: |
+            sum(
+              rate(
+                http_requests_total{
+                  service="{{`{{args.service-name}}`}}",
+                  namespace="{{`{{args.namespace}}`}}",
+                  code=~"5.."
+                }[2m]
+              )
+            )
+            /
+            sum(
+              rate(
+                http_requests_total{
+                  service="{{`{{args.service-name}}`}}",
+                  namespace="{{`{{args.namespace}}`}}"
+                }[2m]
+              )
+            )
+    - name: latency-p99
+      interval: {{ .Values.canary.analysis.interval }}
+      failureLimit: {{ .Values.canary.analysis.threshold }}
+      successCondition: "result[0] < 500"
+      provider:
+        prometheus:
+          address: {{ .Values.canary.analysis.prometheusAddress }}
+          query: |
+            histogram_quantile(0.99,
+              sum(
+                rate(
+                  http_request_duration_seconds_bucket{
+                    service="{{`{{args.service-name}}`}}",
+                    namespace="{{`{{args.namespace}}`}}"
+                  }[2m]
+                )
+              ) by (le)
+            ) * 1000
+{{- end }}
+{{- end }}

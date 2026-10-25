@@ -1,0 +1,17 @@
+apiVersion: v2
+name: sample-microservice
+description: CloudForge production-grade microservice Helm chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: CloudForge
+    url: https://github.com/ARPITDIXIT789/cloudforge
+keywords:
+  - microservice
+  - cloudforge
+  - eks
+  - aws
+home: https://github.com/ARPITDIXIT789/cloudforge
+sources:
+  - https://github.com/ARPITDIXIT789/cloudforge

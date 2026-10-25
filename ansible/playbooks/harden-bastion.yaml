@@ -1,0 +1,17 @@
+---
+# ============================================================================
+# CloudForge - Bastion Host Security Hardening Playbook
+# ============================================================================
+# Applies CIS-benchmark-aligned hardening to bastion hosts.
+# Usage:
+#   ansible-playbook playbooks/harden-bastion.yaml
+#   ansible-playbook playbooks/harden-bastion.yaml --tags ssh,firewall
+# ============================================================================
+
+- name: Harden bastion hosts with CIS-benchmark security controls
+  hosts: bastion
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: security_hardening

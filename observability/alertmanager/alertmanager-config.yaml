@@ -1,0 +1,143 @@
+###############################################################################
+# CloudForge — Alertmanager Configuration (AlertmanagerConfig CRD)
+# ─────────────────────────────────────────────────────────────────────────────
+# Routing:
+#   - critical  → #alerts-critical (Slack)
+#   - warning   → #alerts-warning  (Slack)
+#   - (optional)  Telegram receiver (commented)
+###############################################################################
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: cloudforge-alertmanager-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: cloudforge
+    app.kubernetes.io/component: alertmanager
+    app.kubernetes.io/part-of: cloudforge-observability
+    alertmanagerConfig: cloudforge
+spec:
+  # ╔═════════════════════════════════════════════════════════════════════════╗
+  # ║  Route Tree                                                           ║
+  # ╚═════════════════════════════════════════════════════════════════════════╝
+  route:
+    receiver: slack-critical                 # Default fallback receiver
+    groupBy:
+      - alertname
+      - namespace
+    groupWait: 30s                           # Wait before first notification
+    groupInterval: 5m                        # Wait before sending updates
+    repeatInterval: 4h                       # Re-send if still firing
+    routes:
+      # ── Critical alerts → #alerts-critical ──────────────────────────────
+      - receiver: slack-critical
+        matchers:
+          - name: severity
+            matchType: "="
+            value: critical
+        continue: false
+
+      # ── Warning alerts → #alerts-warning ────────────────────────────────
+      - receiver: slack-warnings
+        matchers:
+          - name: severity
+            matchType: "="
+            value: warning
+        continue: false
+
+  # ╔═════════════════════════════════════════════════════════════════════════╗
+  # ║  Receivers                                                            ║
+  # ╚═════════════════════════════════════════════════════════════════════════╝
+  receivers:
+    # ── Slack: Critical Alerts ────────────────────────────────────────────
+    - name: slack-critical
+      slackConfigs:
+        - apiURL:
+            name: alertmanager-slack-secret
+            key: webhook-url-critical
+          channel: '#alerts-critical'
+          sendResolved: true
+          title: |-
+            [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+          text: |-
+            {{ range .Alerts }}
+            *Alert:* {{ .Labels.alertname }} — {{ .Labels.severity | toUpper }}
+            *Namespace:* {{ .Labels.namespace }}
+            *Description:* {{ .Annotations.description }}
+            *Runbook:* {{ .Annotations.runbook_url }}
+            *Started:* {{ .StartsAt | since }}
+            {{ end }}
+          iconEmoji: ':rotating_light:'
+          username: 'CloudForge Alertmanager'
+
+    # ── Slack: Warning Alerts ─────────────────────────────────────────────
+    - name: slack-warnings
+      slackConfigs:
+        - apiURL:
+            name: alertmanager-slack-secret
+            key: webhook-url-warning
+          channel: '#alerts-warning'
+          sendResolved: true
+          title: |-
+            [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+          text: |-
+            {{ range .Alerts }}
+            *Alert:* {{ .Labels.alertname }} — {{ .Labels.severity }}
+            *Namespace:* {{ .Labels.namespace }}
+            *Description:* {{ .Annotations.description }}
+            *Started:* {{ .StartsAt | since }}
+            {{ end }}
+          iconEmoji: ':warning:'
+          username: 'CloudForge Alertmanager'
+
+    # ── Telegram (Example — uncomment to enable) ─────────────────────────
+    # - name: telegram
+    #   telegramConfigs:
+    #     - botToken:
+    #         name: alertmanager-telegram-secret
+    #         key: bot-token
+    #       chatID:
+    #         name: alertmanager-telegram-secret
+    #         key: chat-id
+    #       sendResolved: true
+    #       message: |-
+    #         {{ range .Alerts }}
+    #         🚨 *{{ .Labels.alertname }}* ({{ .Labels.severity }})
+    #         Namespace: {{ .Labels.namespace }}
+    #         {{ .Annotations.description }}
+    #         {{ end }}
+
+---
+###############################################################################
+# Slack Webhook Secret (placeholder — replace values with base64-encoded URLs)
+###############################################################################
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-slack-secret
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: cloudforge
+    app.kubernetes.io/component: alertmanager
+type: Opaque
+stringData:
+  # Replace with actual Slack incoming webhook URLs
+  webhook-url-critical: "https://hooks.slack.com/services/REPLACE/WITH/CRITICAL_WEBHOOK"
+  webhook-url-warning: "https://hooks.slack.com/services/REPLACE/WITH/WARNING_WEBHOOK"
+
+---
+###############################################################################
+# Telegram Secret (placeholder — uncomment when enabling Telegram receiver)
+###############################################################################
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: alertmanager-telegram-secret
+#   namespace: monitoring
+#   labels:
+#     app.kubernetes.io/name: cloudforge
+#     app.kubernetes.io/component: alertmanager
+# type: Opaque
+# stringData:
+#   bot-token: "REPLACE_WITH_TELEGRAM_BOT_TOKEN"
+#   chat-id: "REPLACE_WITH_TELEGRAM_CHAT_ID"
