@@ -35,7 +35,7 @@ terraform {
 
   # Override the root backend key for the dev environment
   backend "s3" {
-    bucket         = "cloudforge-terraform-state"
+    bucket         = "arpit-cloudforge-state-2026"
     key            = "cloudforge/dev/terraform.tfstate"
     region         = "ap-south-1"
     dynamodb_table = "cloudforge-terraform-locks"

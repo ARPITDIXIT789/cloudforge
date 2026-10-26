@@ -41,7 +41,7 @@ terraform {
 
   # Production state — isolated from dev/staging
   backend "s3" {
-    bucket         = "cloudforge-terraform-state"
+    bucket         = "arpit-cloudforge-state-2026"
     key            = "cloudforge/prod/terraform.tfstate"
     region         = "ap-south-1"
     dynamodb_table = "cloudforge-terraform-locks"
