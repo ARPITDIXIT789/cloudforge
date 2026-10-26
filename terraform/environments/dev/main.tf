@@ -80,7 +80,6 @@ module "vpc" {
   project_name = var.project_name
   environment  = var.environment
   vpc_cidr     = var.vpc_cidr
-  aws_region   = var.aws_region
 }
 
 # -----------------------------------------------------------------------------
@@ -92,10 +91,11 @@ module "vpc" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
+  cluster_name = "${var.project_name}-${var.environment}-eks"
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_id       = module.vpc.vpc_id
+  subnet_ids   = module.vpc.private_subnet_ids
 
   # Dev-appropriate sizing — small cluster for cost efficiency
   node_instance_types = ["t3.medium"]
@@ -109,16 +109,18 @@ module "eks" {
 # -----------------------------------------------------------------------------
 # Module: RDS
 # -----------------------------------------------------------------------------
-# Deploys a PostgreSQL RDS instance in private subnets. Security group chaining
-# allows inbound access only from EKS worker nodes and the bastion host.
+# Deploys a PostgreSQL RDS instance in isolated subnets. Security group chaining
+# allows inbound access only from EKS worker nodes.
 
 module "rds" {
   source = "../../modules/rds"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
+  identifier                 = "${var.project_name}-${var.environment}-rds"
+  project_name               = var.project_name
+  environment                = var.environment
+  vpc_id                     = module.vpc.vpc_id
+  isolated_subnet_ids        = module.vpc.isolated_subnet_ids
+  eks_node_security_group_id = module.eks.node_security_group_id
 
   # Database configuration
   db_name     = var.db_name
@@ -127,9 +129,6 @@ module "rds" {
   # Dev-appropriate sizing — single-AZ, smaller instance
   instance_class = "db.t3.medium"
   multi_az       = false
-
-  # Security group chaining: allow EKS nodes → RDS
-  allowed_security_group_ids = [module.eks.node_security_group_id]
 
   depends_on = [module.vpc]
 }

@@ -7,13 +7,28 @@ output "db_endpoint" {
   value       = aws_db_instance.this.endpoint
 }
 
+output "endpoint" {
+  description = "Alias for db_endpoint."
+  value       = aws_db_instance.this.endpoint
+}
+
 output "db_name" {
   description = "The name of the database."
   value       = aws_db_instance.this.db_name
 }
 
+output "database_name" {
+  description = "Alias for db_name."
+  value       = aws_db_instance.this.db_name
+}
+
 output "db_port" {
   description = "The port the database is listening on."
+  value       = aws_db_instance.this.port
+}
+
+output "port" {
+  description = "Alias for db_port."
   value       = aws_db_instance.this.port
 }
 
