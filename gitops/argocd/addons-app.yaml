@@ -87,7 +87,7 @@ spec:
   source:
     repoURL: https://charts.jetstack.io
     chart: cert-manager
-    targetRevision: v1.15.*
+    targetRevision: 1.15.*
     helm:
       releaseName: cert-manager
       valuesObject:
@@ -99,9 +99,7 @@ spec:
         serviceAccount:
           create: true
           name: cert-manager
-          annotations:
-            # -- IRSA annotation: replace with your real IAM role ARN
-            eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/cloudforge-cert-manager-role"
+          annotations: {}
         securityContext:
           runAsNonRoot: true
           fsGroup: 1001
