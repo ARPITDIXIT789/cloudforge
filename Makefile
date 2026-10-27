@@ -62,7 +62,7 @@ bastion-harden:
 gitops-init:
 	@echo -e "$(CYAN)--> Initializing GitOps control plane (ArgoCD & Root App)...$(RESET)"
 	@kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-	@kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+	@kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 	@echo -e "$(YELLOW)--> Waiting for ArgoCD server deployment...$(RESET)"
 	@kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=300s || true
 	@echo -e "$(CYAN)--> Registering CloudForge Addons & Root App-of-Apps...$(RESET)"
