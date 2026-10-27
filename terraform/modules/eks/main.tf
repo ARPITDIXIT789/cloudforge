@@ -284,6 +284,7 @@ resource "aws_eks_node_group" "this" {
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = var.subnet_ids
 
+  ami_type       = "AL2023_x86_64_STANDARD"
   instance_types = var.node_instance_types
   disk_size      = 50
 

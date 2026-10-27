@@ -134,8 +134,10 @@ module "rds" {
   db_username = var.db_username
 
   # Production sizing — Multi-AZ, larger instance for sustained throughput
-  instance_class = "db.r6g.large"
-  multi_az       = true
+  instance_class          = "db.r6g.large"
+  multi_az                = true
+  backup_retention_period = 7
+  skip_final_snapshot     = false
 
   depends_on = [module.vpc]
 }

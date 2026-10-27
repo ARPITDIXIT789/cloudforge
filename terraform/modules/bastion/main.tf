@@ -59,7 +59,7 @@ data "aws_ami" "amazon_linux_2023" {
 # ---------------------------------------------------------------------------
 resource "aws_security_group" "bastion" {
   name        = "${var.project_name}-${var.environment}-bastion-sg"
-  description = "Bastion host security group — SSH from admin CIDR only"
+  description = "Bastion host security group for SSH access"
   vpc_id      = var.vpc_id
 
   tags = merge(local.common_tags, {

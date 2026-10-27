@@ -74,5 +74,11 @@ variable "multi_az" {
 variable "skip_final_snapshot" {
   description = "Skip final snapshot when destroying the RDS instance."
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "backup_retention_period" {
+  description = "Backup retention period in days (0 or 1 for Free Tier accounts)."
+  type        = number
+  default     = 1
 }

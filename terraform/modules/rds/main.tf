@@ -115,7 +115,7 @@ resource "aws_security_group_rule" "db_egress_none" {
 # RDS Instance — PostgreSQL 16
 # ---------------------------------------------------------------------------
 resource "aws_db_instance" "this" {
-  identifier = "${var.project_name}-${var.environment}-${var.identifier}"
+  identifier = var.identifier
 
   # Engine
   engine         = "postgres"
@@ -139,18 +139,13 @@ resource "aws_db_instance" "this" {
   publicly_accessible    = false
 
   # Backup & Maintenance
-  backup_retention_period = 7
+  backup_retention_period = var.backup_retention_period
   backup_window           = "03:00-04:00"
   maintenance_window      = "sun:04:30-sun:05:30"
 
   # Snapshot
   skip_final_snapshot       = var.skip_final_snapshot
-  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.project_name}-${var.environment}-${var.identifier}-final"
-
-  # Lifecycle protection
-  lifecycle {
-    prevent_destroy = true
-  }
+  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.identifier}-final"
 
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-${var.identifier}"
