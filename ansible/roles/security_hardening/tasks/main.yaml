@@ -23,7 +23,6 @@
     name:
       - audit
       - audit-libs
-      - curl
       - unzip
       - jq
       - git
@@ -156,12 +155,13 @@
     - permissions
 
 # --------------------------------------------------------------------------
-# 3. Firewall (UFW)
+# 3. Firewall (UFW - Debian/Ubuntu only; AWS SG enforces perimeter firewall)
 # --------------------------------------------------------------------------
 - name: "Firewall | Install UFW"
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: ufw
     state: present
+  when: ansible_os_family == "Debian"
   tags:
     - firewall
 
@@ -169,6 +169,7 @@
   community.general.ufw:
     default: deny
     direction: incoming
+  when: ansible_os_family == "Debian"
   tags:
     - firewall
 
@@ -176,6 +177,7 @@
   community.general.ufw:
     default: allow
     direction: outgoing
+  when: ansible_os_family == "Debian"
   tags:
     - firewall
 
@@ -185,12 +187,14 @@
     port: "{{ item }}"
     proto: tcp
   loop: "{{ ufw_allowed_ports }}"
+  when: ansible_os_family == "Debian"
   tags:
     - firewall
 
 - name: "Firewall | Enable UFW"
   community.general.ufw:
     state: enabled
+  when: ansible_os_family == "Debian"
   tags:
     - firewall
 
