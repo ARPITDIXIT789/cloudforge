@@ -28,23 +28,11 @@ serviceAccount:
 podAnnotations: {}
 
 ## -- Pod-level security context
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 65534
-  runAsGroup: 65534
-  fsGroup: 65534
-  seccompProfile:
-    type: RuntimeDefault
+podSecurityContext: {}
 
 ## -- Container-level security context
 securityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 65534
-  capabilities:
-    drop:
-      - ALL
 
 ## -- Service configuration
 service:
@@ -79,9 +67,9 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-## -- Horizontal Pod Autoscaler configuration
+## -- Horizontal Pod Autoscaler configuration (enable after installing metrics-server)
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilization: 70
