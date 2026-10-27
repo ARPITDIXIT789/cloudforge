@@ -25,15 +25,15 @@ spec:
     helm:
       releaseName: aws-load-balancer-controller
       valuesObject:
-        clusterName: cloudforge-cluster
+        clusterName: cloudforge-dev-eks
         region: ap-south-1
-        vpcId: vpc-xxxxxxxxxxxxxxxxx
+        vpcId: vpc-008618339fe188928
         serviceAccount:
           create: true
           name: aws-load-balancer-controller
           annotations:
             # -- IRSA annotation: replace with your real IAM role ARN
-            eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/cloudforge-aws-lb-controller-role"
+            eks.amazonaws.com/role-arn: "arn:aws:iam::942893240217:role/cloudforge-aws-lb-controller-role"
         replicaCount: 2
         resources:
           limits:

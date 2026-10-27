@@ -7,7 +7,7 @@ replicaCount: 2
 
 ## -- Container image configuration
 image:
-  repository: "123456789012.dkr.ecr.ap-south-1.amazonaws.com/cloudforge-app"
+  repository: "942893240217.dkr.ecr.ap-south-1.amazonaws.com/cloudforge-app"
   tag: "latest"
   pullPolicy: IfNotPresent
 
