@@ -10,11 +10,11 @@
     enabled: true
 
 - name: Restart auditd
-  ansible.builtin.service:
-    name: auditd
-    state: restarted
-    enabled: true
+  ansible.builtin.command: service auditd restart
+  failed_when: false
+  changed_when: true
 
 - name: Reload ufw
   community.general.ufw:
     state: enabled
+  when: ansible_os_family == "Debian"
