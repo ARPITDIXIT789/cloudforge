@@ -12,6 +12,7 @@ on:
     paths:
       - 'app/**'
       - 'Dockerfile'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
 
