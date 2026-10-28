@@ -111,6 +111,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN || 'arn:aws:iam::942893240217:role/cloudforge-github-actions-role' }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
       - name: Login to Amazon ECR
         id: login-ecr
