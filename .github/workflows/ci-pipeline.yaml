@@ -132,6 +132,8 @@ jobs:
         run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
       - name: Generate SBOM with Trivy
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           trivy image --format cyclonedx --output sbom.json $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
