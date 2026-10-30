@@ -136,19 +136,19 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p90",
           "refId": "B"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -192,19 +192,19 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p90",
           "refId": "B"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=\"$namespace\", pod=~\"$pod\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate({__name__=~\"(cloudforge_)?http_request_duration_seconds_bucket\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -290,25 +290,25 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"2..\"}[1m]))",
+          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"2..\"}[1m]))",
           "legendFormat": "2xx",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"3..\"}[1m]))",
+          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"3..\"}[1m]))",
           "legendFormat": "3xx",
           "refId": "B"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"4..\"}[1m]))",
+          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"4..\"}[1m]))",
           "legendFormat": "4xx",
           "refId": "C"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))",
+          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))",
           "legendFormat": "5xx",
           "refId": "D"
         }
@@ -350,7 +350,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\"}[1m]))",
+          "expr": "sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m]))",
           "legendFormat": "Total RPS",
           "refId": "A"
         }
@@ -418,7 +418,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "(\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))\n  /\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\"}[1m]))\n) * 100",
+          "expr": "(\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))\n  /\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m]))\n) * 100",
           "legendFormat": "5xx Error Rate %",
           "refId": "A"
         }
@@ -462,7 +462,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "(\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))\n  /\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=\"$namespace\", pod=~\"$pod\"}[1m]))\n) * 100",
+          "expr": "(\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\", status=~\"5..\"}[1m]))\n  /\n  sum(rate({__name__=~\"(cloudforge_)?http_requests_total\", namespace=~\"$namespace\", pod=~\"$pod\"}[1m]))\n) * 100",
           "legendFormat": "Error Rate %",
           "refId": "A"
         }
@@ -530,7 +530,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "(\n  sum by (pod) (\n    rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\"}[5m])\n  )\n  /\n  sum by (pod) (\n    kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"cpu\"}\n  )\n) * 100",
+          "expr": "(\n  sum by (pod) (\n    rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$pod\", container!=\"\"}[5m])\n  )\n  /\n  sum by (pod) (\n    kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"cpu\"}\n  )\n) * 100",
           "legendFormat": "{{ pod }}",
           "refId": "A"
         }
@@ -591,7 +591,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "(\n  sum by (pod) (\n    container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"$pod\", container!=\"\"}\n  )\n  /\n  sum by (pod) (\n    kube_pod_container_resource_requests{namespace=\"$namespace\", pod=~\"$pod\", resource=\"memory\"}\n  )\n) * 100",
+          "expr": "(\n  sum by (pod) (\n    container_memory_working_set_bytes{namespace=~\"$namespace\", pod=~\"$pod\", container!=\"\"}\n  )\n  /\n  sum by (pod) (\n    kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$pod\", resource=\"memory\"}\n  )\n) * 100",
           "legendFormat": "{{ pod }}",
           "refId": "A"
         }
@@ -612,42 +612,62 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "default",
+          "value": "default"
+        },
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "definition": "label_values(kube_namespace_labels, namespace)",
+        "definition": "label_values(kube_pod_info, namespace)",
         "description": "Kubernetes namespace",
         "hide": 0,
-        "includeAll": false,
+        "includeAll": true,
         "label": "Namespace",
         "multi": false,
         "name": "namespace",
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "default",
+            "value": "default"
+          }
+        ],
         "query": {
-          "query": "label_values(kube_namespace_labels, namespace)",
+          "query": "label_values(kube_pod_info, namespace)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "definition": "label_values(kube_pod_info{namespace=\"$namespace\"}, pod)",
+        "definition": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
         "description": "Pod name (supports regex)",
         "hide": 0,
         "includeAll": true,
         "label": "Pod",
         "multi": true,
         "name": "pod",
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          }
+        ],
         "query": {
-          "query": "label_values(kube_pod_info{namespace=\"$namespace\"}, pod)",
+          "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
