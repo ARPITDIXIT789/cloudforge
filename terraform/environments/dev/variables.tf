@@ -81,3 +81,10 @@ variable "db_username" {
     error_message = "db_username must start with a letter and contain only alphanumeric characters or underscores."
   }
 }
+
+variable "db_password" {
+  description = "Master password for the RDS PostgreSQL instance."
+  type        = string
+  default     = "CloudForge2026Secure!"
+  sensitive   = true
+}

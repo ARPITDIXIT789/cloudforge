@@ -129,7 +129,7 @@ env:
   - name: DB_USER
     value: "cloudforge_admin"
   - name: DB_PASSWORD
-    value: "01V#:eY*&hHC?Mp*4z1SkYbmS(lV3(Uj"
+    value: "CloudForge2026Secure!"
   - name: ENVIRONMENT
     value: "dev"
   - name: APP_VERSION

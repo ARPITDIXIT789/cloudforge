@@ -83,6 +83,13 @@ variable "skip_final_snapshot" {
   default     = true
 }
 
+variable "db_password" {
+  description = "Master password for RDS master user. If not set, a random password is used."
+  type        = string
+  default     = "CloudForge2026Secure!"
+  sensitive   = true
+}
+
 variable "backup_retention_period" {
   description = "Backup retention period in days (0 or 1 for Free Tier accounts)."
   type        = number

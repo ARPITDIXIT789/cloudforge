@@ -126,6 +126,7 @@ module "rds" {
   # Database configuration
   db_name     = var.db_name
   db_username = var.db_username
+  db_password = var.db_password
 
   # Dev-appropriate sizing — Free Tier eligible db.t3.micro
   instance_class = "db.t3.micro"
