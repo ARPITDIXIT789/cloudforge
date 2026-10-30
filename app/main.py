@@ -191,9 +191,9 @@ async def dashboard(request: Request):
     uptime_str = f"{uptime_seconds // 3600}h {(uptime_seconds % 3600) // 60}m {uptime_seconds % 60}s"
 
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
+        request=request,
+        name="index.html",
+        context={
             "project_name": PROJECT_NAME,
             "app_version": APP_VERSION,
             "environment": ENVIRONMENT,
