@@ -218,6 +218,7 @@ async def add_log(title: str = Form(...), author: str = Form("DevOps Engineer"))
 
     if db_connected:
         try:
+            init_db()
             with get_db_connection() as conn:
                 with conn.cursor() as cur:
                     cur.execute(
