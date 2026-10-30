@@ -45,7 +45,7 @@ resource "random_password" "db" {
 resource "aws_secretsmanager_secret" "db" {
   name                    = "${var.project_name}/${var.environment}/rds/${var.identifier}"
   description             = "Master credentials for RDS instance ${var.identifier}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-rds-secret"
