@@ -27,7 +27,7 @@ spec:
       valuesObject:
         clusterName: cloudforge-dev-eks
         region: ap-south-1
-        vpcId: vpc-008618339fe188928
+        vpcId: vpc-01fd1475c184d7111
         serviceAccount:
           create: true
           name: aws-load-balancer-controller
