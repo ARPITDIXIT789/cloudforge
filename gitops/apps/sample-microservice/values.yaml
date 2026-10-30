@@ -41,6 +41,10 @@ service:
   targetPort: 8080
   protocol: TCP
 
+## -- ServiceMonitor configuration
+serviceMonitor:
+  enabled: true
+
 ## -- Ingress (AWS ALB) configuration
 ingress:
   enabled: true

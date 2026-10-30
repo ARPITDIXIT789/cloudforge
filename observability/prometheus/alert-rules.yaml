@@ -151,7 +151,7 @@ spec:
             histogram_quantile(
               0.99,
               sum by (le, job, namespace) (
-                rate(http_request_duration_seconds_bucket[5m])
+                rate({__name__=~"(cloudforge_)?http_request_duration_seconds_bucket"}[5m])
               )
             ) > 1
           for: 5m
@@ -172,14 +172,14 @@ spec:
           expr: |
             (
               sum by (job, namespace) (
-                rate(http_requests_total{status=~"5.."}[5m])
+                rate({__name__=~"(cloudforge_)?http_requests_total", status=~"5.."}[1m])
               )
               /
               sum by (job, namespace) (
-                rate(http_requests_total[5m])
+                rate({__name__=~"(cloudforge_)?http_requests_total"}[1m])
               )
             ) * 100 > 1
-          for: 5m
+          for: 1m
           labels:
             severity: critical
             team: application

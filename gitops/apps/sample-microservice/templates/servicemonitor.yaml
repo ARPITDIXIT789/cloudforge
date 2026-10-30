@@ -1,6 +1,7 @@
 ###############################################################################
 # CloudForge — ServiceMonitor for Prometheus Scrapes
 ###############################################################################
+{{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -17,3 +18,4 @@ spec:
     - port: http
       path: /metrics
       interval: 15s
+{{- end }}
