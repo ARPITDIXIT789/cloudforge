@@ -169,4 +169,5 @@ jobs:
           git add gitops/apps/sample-microservice/values.yaml
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore(gitops): update image tag to ${{ env.IMAGE_TAG }}"
-          git push
+          git pull --rebase origin main
+          git push origin main
