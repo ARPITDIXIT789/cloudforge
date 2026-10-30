@@ -8,7 +8,7 @@ replicaCount: 2
 ## -- Container image configuration
 image:
   repository: "942893240217.dkr.ecr.ap-south-1.amazonaws.com/cloudforge-app"
-  tag: "a60a27ab9966a5100158e966dfca186f60b725ae"
+  tag: "0a2cc37e971aeff55fdf9de3cb287633dfbe52a4"
   pullPolicy: IfNotPresent
 
 ## -- Optional image pull secrets for private registries
