@@ -119,8 +119,9 @@ module "rds" {
   project_name               = var.project_name
   environment                = var.environment
   vpc_id                     = module.vpc.vpc_id
-  isolated_subnet_ids        = module.vpc.isolated_subnet_ids
-  eks_node_security_group_id = module.eks.node_security_group_id
+  isolated_subnet_ids                   = module.vpc.isolated_subnet_ids
+  eks_node_security_group_id            = module.eks.node_security_group_id
+  eks_cluster_primary_security_group_id = module.eks.cluster_primary_security_group_id
 
   # Database configuration
   db_name     = var.db_name

@@ -101,6 +101,17 @@ resource "aws_security_group_rule" "db_ingress_eks" {
   security_group_id        = aws_security_group.db.id
 }
 
+resource "aws_security_group_rule" "db_ingress_eks_primary" {
+  count                    = var.eks_cluster_primary_security_group_id != "" ? 1 : 0
+  description              = "PostgreSQL access from EKS cluster primary SG (managed nodes & pods)"
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = var.eks_cluster_primary_security_group_id
+  security_group_id        = aws_security_group.db.id
+}
+
 resource "aws_security_group_rule" "db_egress_none" {
   description       = "Deny all outbound (RDS does not initiate connections)"
   type              = "egress"

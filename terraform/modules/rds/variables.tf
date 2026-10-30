@@ -50,6 +50,12 @@ variable "eks_node_security_group_id" {
   type        = string
 }
 
+variable "eks_cluster_primary_security_group_id" {
+  description = "Cluster primary security group created by EKS for nodes and pods (for ingress rule)."
+  type        = string
+  default     = ""
+}
+
 variable "environment" {
   description = "Deployment environment (e.g. dev, staging, prod)."
   type        = string

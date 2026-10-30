@@ -32,6 +32,11 @@ output "node_security_group_id" {
   value       = aws_security_group.node.id
 }
 
+output "cluster_primary_security_group_id" {
+  description = "Cluster primary security group created by EKS for nodes and pods."
+  value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}
+
 output "oidc_provider_arn" {
   description = "ARN of the OIDC provider for IRSA."
   value       = aws_iam_openid_connect_provider.this.arn
