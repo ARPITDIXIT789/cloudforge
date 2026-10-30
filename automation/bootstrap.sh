@@ -133,6 +133,35 @@ log_info "Checking Kubernetes node connectivity..."
 kubectl get nodes -o wide
 
 # ------------------------------------------------------------------------------
+# 4b. Sync AWS Load Balancer Controller IRSA Trust Policy
+# ------------------------------------------------------------------------------
+log_info "Synchronizing AWS Load Balancer Controller IRSA trust policy with current cluster OIDC..."
+OIDC_ISSUER=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --region "${AWS_REGION}" --query "cluster.identity.oidc.issuer" --output text | sed 's|https://||')
+OIDC_ARN="arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_ISSUER}"
+TRUST_POLICY=$(cat << EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "${OIDC_ARN}"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "${OIDC_ISSUER}:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller",
+          "${OIDC_ISSUER}:aud": "sts.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+EOF
+)
+aws iam update-assume-role-policy --role-name cloudforge-aws-lb-controller-role --policy-document "${TRUST_POLICY}" || true
+
+# ------------------------------------------------------------------------------
 # 5. ArgoCD GitOps Engine Bootstrap
 # ------------------------------------------------------------------------------
 log_info "Installing ArgoCD into 'argocd' namespace..."
