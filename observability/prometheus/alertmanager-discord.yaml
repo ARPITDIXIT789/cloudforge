@@ -7,15 +7,17 @@ alertmanager:
       resolve_timeout: 5m
     route:
       group_by: ['alertname', 'namespace']
-      group_wait: 10s
-      group_interval: 30s
+      group_wait: 5s
+      group_interval: 10s
       repeat_interval: 1h
-      receiver: 'discord'
+      receiver: 'null'
       routes:
         - receiver: 'discord'
           matchers:
+            - alertname != "Watchdog"
             - severity =~ "critical|warning"
     receivers:
+      - name: 'null'
       - name: 'discord'
         slack_configs:
           - api_url: 'https://discord.com/api/webhooks/1566660535603171350/D2nHMuD41oOjrjCYINZsSKbbwPdHt9OOVAPW9vgqtdZTu72WKLP--fIlTp1Yg6vgkQAa/slack'
