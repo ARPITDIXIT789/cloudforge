@@ -103,7 +103,6 @@ resource "aws_security_group_rule" "db_ingress_eks" {
 }
 
 resource "aws_security_group_rule" "db_ingress_eks_primary" {
-  count                    = var.eks_cluster_primary_security_group_id != "" ? 1 : 0
   description              = "PostgreSQL access from EKS cluster primary SG (managed nodes & pods)"
   type                     = "ingress"
   from_port                = 5432
