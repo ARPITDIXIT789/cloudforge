@@ -1,0 +1,30 @@
+###############################################################################
+# CloudForge — Alertmanager Discord Webhook Integration
+###############################################################################
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname', 'namespace']
+      group_wait: 10s
+      group_interval: 30s
+      repeat_interval: 1h
+      receiver: 'discord'
+      routes:
+        - receiver: 'discord'
+          matchers:
+            - severity =~ "critical|warning"
+    receivers:
+      - name: 'discord'
+        slack_configs:
+          - api_url: 'https://discord.com/api/webhooks/1566660535603171350/D2nHMuD41oOjrjCYINZsSKbbwPdHt9OOVAPW9vgqtdZTu72WKLP--fIlTp1Yg6vgkQAa/slack'
+            channel: '#general'
+            send_resolved: true
+            icon_emoji: ':rotating_light:'
+            title: '{{ if eq .Status "firing" }}🔥 [ALERT: FIRING]{{ else }}✅ [RESOLVED]{{ end }} - {{ .CommonLabels.alertname }}'
+            text: >-
+              *Severity:* `{{ .CommonLabels.severity }}`
+              *Namespace:* `{{ .CommonLabels.namespace }}`
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
