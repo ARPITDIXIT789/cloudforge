@@ -73,24 +73,24 @@ resources:
 
 ## -- Horizontal Pod Autoscaler configuration (enable after installing metrics-server)
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilization: 70
+  maxReplicas: 8
+  targetCPUUtilization: 40
   targetMemoryUtilization: 80
   behavior:
     scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+    scaleDown:
       stabilizationWindowSeconds: 60
       policies:
         - type: Pods
-          value: 3
-          periodSeconds: 60
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      policies:
-        - type: Pods
           value: 1
-          periodSeconds: 300
+          periodSeconds: 60
 
 ## -- Health check configuration
 healthcheck:
