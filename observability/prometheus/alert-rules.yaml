@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/name: cloudforge
     app.kubernetes.io/component: alerting
     app.kubernetes.io/part-of: cloudforge-observability
-    prometheus: kube-prometheus
+    release: kube-prometheus-stack
     role: alert-rules
 spec:
   groups:
@@ -171,11 +171,11 @@ spec:
         - alert: HighErrorRate
           expr: |
             (
-              sum by (job, namespace) (
+              sum by (namespace) (
                 rate({__name__=~"(cloudforge_)?http_requests_total", status=~"5.."}[1m])
               )
               /
-              sum by (job, namespace) (
+              sum by (namespace) (
                 rate({__name__=~"(cloudforge_)?http_requests_total"}[1m])
               )
             ) * 100 > 1
@@ -184,10 +184,9 @@ spec:
             severity: critical
             team: application
           annotations:
-            summary: "High 5xx error rate for {{ $labels.job }} in {{ $labels.namespace }}"
+            summary: "High 5xx error rate in {{ $labels.namespace }}"
             description: >-
-              Error rate for {{ $labels.job }} in namespace
-              {{ $labels.namespace }} is {{ $value | printf "%.2f" }}%,
+              High 5xx error rate in namespace {{ $labels.namespace }} is {{ $value | printf "%.2f" }}%,
               exceeding the 1% SLO threshold. Investigate application logs
               and upstream dependencies.
             runbook_url: "https://runbooks.cloudforge.io/high-error-rate"

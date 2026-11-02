@@ -1,6 +1,12 @@
 ###############################################################################
 # CloudForge — Alertmanager Discord Webhook Integration
 ###############################################################################
+# Disable EKS unmanaged control plane scrapers (prevents false-positive alerts on AWS EKS)
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+
 alertmanager:
   config:
     global:
@@ -14,8 +20,7 @@ alertmanager:
       routes:
         - receiver: 'discord'
           matchers:
-            - alertname != "Watchdog"
-            - severity =~ "critical|warning"
+            - alertname =~ "HighErrorRate|PodCrashLooping|TargetUnhealthy|HighLatencyP99"
     receivers:
       - name: 'null'
       - name: 'discord'
