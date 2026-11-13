@@ -25,7 +25,7 @@ alertmanager:
       - name: 'null'
       - name: 'discord'
         slack_configs:
-          - api_url: 'https://discord.com/api/webhooks/1566660535603171350/D2nHMuD41oOjrjCYINZsSKbbwPdHt9OOVAPW9vgqtdZTu72WKLP--fIlTp1Yg6vgkQAa/slack'
+          - api_url: 'https://discord.com/api/webhooks/1570652682035789845/SB-e4C6svNXK0WII-7DMQ8cNrKWA2RJYxJagajREhDqwr5EX9913n8XtZt4Otdxwt2uX/slack'
             channel: '#general'
             send_resolved: true
             icon_emoji: ':rotating_light:'
